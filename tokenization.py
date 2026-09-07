@@ -1,21 +1,29 @@
-import json
-from collections import Counter
 from pathlib import Path
-from preprocess import preprocess_text 
+from collections import Counter
+import json
+from preprocessing import preprocess_text
+
+
+PAD_TOKEN = "<PAD>"
+UNK_TOKEN = "<UNK>"
+
 
 def tokenize_file(file_path):
     text = Path(file_path).read_text(encoding="utf-8")
     text = preprocess_text(text)
     lines = text.splitlines()
-    tokenized_lines = [line.split() for line in lines if line.strip()]
-    return tokenized_lines
+    return [line.split() for line in lines if line.strip()]
 
 
 def create_vocabulary(tokenized_lines):
     word_counts = Counter(word for line in tokenized_lines for word in line)
 
-    word_to_token = {}
-    token = 1
+    word_to_token = {
+        PAD_TOKEN: 0,
+        UNK_TOKEN: 1
+    }
+
+    token = 2
 
     for word in word_counts:
         word_to_token[word] = token
@@ -27,7 +35,13 @@ def create_vocabulary(tokenized_lines):
 
 
 def vectorize_lines(tokenized_lines, word_to_token):
-    vectorized_lines = [[word_to_token[word] for word in line] for line in tokenized_lines]
+    unk_token = word_to_token[UNK_TOKEN]
+
+    vectorized_lines = [
+        [word_to_token.get(word, unk_token) for word in line]
+        for line in tokenized_lines
+    ]
+
     return vectorized_lines
 
 
