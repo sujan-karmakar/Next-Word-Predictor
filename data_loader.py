@@ -1,8 +1,11 @@
 import torch
-
+from torch.utils.data import TensorDataset, DataLoader
 from tokenization import tokenize_file, create_vocabulary, vectorize_lines, save_mappings
 
+
 SEQ_LEN = 20
+BATCH_SIZE = 64
+
 
 def create_training_data(vectorized_lines, seq_len):
     X = []
@@ -36,3 +39,26 @@ X_train, Y_train = create_training_data(vectorized_lines, SEQ_LEN)
 
 print("X shape:", X_train.shape)
 print("Y shape:", Y_train.shape)
+
+
+train_dataset = TensorDataset(X_train, Y_train)
+
+train_loader = DataLoader(
+    train_dataset,
+    batch_size=BATCH_SIZE,
+    shuffle=True
+)
+
+print("Number of batches:", len(train_loader))
+
+
+X_batch, Y_batch = next(iter(train_loader))
+
+print("X batch shape:", X_batch.shape)
+print("Y batch shape:", Y_batch.shape)
+
+print("X batch:")
+print(X_batch)
+
+print("Y batch:")
+print(Y_batch)
