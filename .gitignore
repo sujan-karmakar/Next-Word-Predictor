@@ -2,3 +2,4 @@ __pycache__/
 .vscode/
 data/
 word_mapping/
+best_model.pth

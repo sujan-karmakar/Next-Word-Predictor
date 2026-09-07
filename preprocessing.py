@@ -2,13 +2,15 @@ from pathlib import Path
 import regex as re
 
 def preprocess_text(text):
+    text = re.sub(r"<.*?>", "", text).strip() # Remove angular brackets
+    
     text = re.sub(r"[^\p{L}\s]", "", text) # Remove punctuation and special characters
 
     text = re.sub(r"[ \t]+", " ", text) # Remove extra spaces/tabs
 
     text = re.sub(r"\n+", "\n", text).strip() # Remove unnecessary blank lines
 
-    text = re.sub(r"<.*?>", "", text).strip() # Remove angular brackets
+    
 
     return text
 

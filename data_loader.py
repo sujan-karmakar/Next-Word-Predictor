@@ -2,10 +2,8 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader
 from tokenization import tokenize_file, create_vocabulary, vectorize_lines, save_mappings
 
-
 SEQ_LEN = 20
 BATCH_SIZE = 64
-
 
 def create_training_data(vectorized_lines, seq_len):
     X = []
@@ -27,38 +25,22 @@ def create_training_data(vectorized_lines, seq_len):
     return X, Y
 
 
-tokenized_lines = tokenize_file("data/processed/combined_text.txt")
+def create_train_loader():
+    tokenized_lines = tokenize_file("data/processed/combined_text.txt")
+    word_to_token, token_to_word = create_vocabulary(tokenized_lines)
+    vectorized_lines = vectorize_lines(tokenized_lines, word_to_token)
 
-word_to_token, token_to_word = create_vocabulary(tokenized_lines)
+    save_mappings(word_to_token, token_to_word)
 
-vectorized_lines = vectorize_lines(tokenized_lines, word_to_token)
+    X_train, Y_train = create_training_data(vectorized_lines, SEQ_LEN)
 
-save_mappings(word_to_token, token_to_word)
-
-X_train, Y_train = create_training_data(vectorized_lines, SEQ_LEN)
-
-print("X shape:", X_train.shape)
-print("Y shape:", Y_train.shape)
-
-
-train_dataset = TensorDataset(X_train, Y_train)
-
-train_loader = DataLoader(
-    train_dataset,
-    batch_size=BATCH_SIZE,
-    shuffle=True
-)
-
-print("Number of batches:", len(train_loader))
+    print("X shape:", X_train.shape)
+    print("Y shape:", Y_train.shape)
 
 
-X_batch, Y_batch = next(iter(train_loader))
+    train_dataset = TensorDataset(X_train, Y_train)
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
-print("X batch shape:", X_batch.shape)
-print("Y batch shape:", Y_batch.shape)
+    print("Number of batches:", len(train_loader))
 
-print("X batch:")
-print(X_batch)
-
-print("Y batch:")
-print(Y_batch)
+    return train_loader, word_to_token, token_to_word
