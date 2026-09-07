@@ -3,7 +3,7 @@ import torch.nn as nn
 
 
 class GRU(nn.Module):
-    def __init__(self, vocab_size, embedding_dim=128, hidden_size=256, num_layers=2, dropout=0.2):
+    def __init__(self, vocab_size, embedding_dim=192, hidden_size=384, num_layers=2, dropout=0.3):
         super().__init__()
 
         self.embedding = nn.Embedding(
@@ -20,15 +20,11 @@ class GRU(nn.Module):
             dropout = dropout if num_layers > 1 else 0
         )
 
+        self.dropout_layer = nn.Dropout(dropout)
         self.fc = nn.Linear(hidden_size, vocab_size)
 
-    def forward(self, x):
+    def forward(self, x, lengths):
         embedded = self.embedding(x)
-
-        output, hidden = self.gru(embedded)
-
-        last_output = output[:, -1, :]
-
-        logits = self.fc(last_output)
-
-        return logits
+        packed = nn.utils.rnn.pack_padded_sequence(embedded, lengths.cpu(), batch_first=True, enforce_sorted=False)
+        _, hidden = self.gru(packed)
+        return self.fc(self.dropout_layer(hidden[-1]))

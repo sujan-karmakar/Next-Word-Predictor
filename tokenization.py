@@ -1,11 +1,15 @@
 from pathlib import Path
 from collections import Counter
+import hashlib
 import json
 from preprocessing import preprocess_text
 
 
-PAD_TOKEN = "<PAD>"
-UNK_TOKEN = "<UNK>"
+PAD_TOKEN = "<pad>"
+UNK_TOKEN = "<unk>"
+BOS_TOKEN = "<bos>"
+EOS_TOKEN = "<eos>"
+SPECIAL_TOKENS = (PAD_TOKEN, UNK_TOKEN, BOS_TOKEN, EOS_TOKEN)
 
 
 def tokenize_file(file_path):
@@ -15,19 +19,16 @@ def tokenize_file(file_path):
     return [line.split() for line in lines if line.strip()]
 
 
-def create_vocabulary(tokenized_lines):
+def create_vocabulary(tokenized_lines, min_frequency=2, max_vocabulary_size=30000):
     word_counts = Counter(word for line in tokenized_lines for word in line)
 
-    word_to_token = {
-        PAD_TOKEN: 0,
-        UNK_TOKEN: 1
-    }
-
-    token = 2
-
-    for word in word_counts:
-        word_to_token[word] = token
-        token += 1
+    ranked_words = sorted(
+        (word for word, count in word_counts.items() if count >= min_frequency and word not in SPECIAL_TOKENS),
+        key=lambda word: (-word_counts[word], word),
+    )
+    if max_vocabulary_size is not None:
+        ranked_words = ranked_words[:max(0, max_vocabulary_size - len(SPECIAL_TOKENS))]
+    word_to_token = {word: index for index, word in enumerate(list(SPECIAL_TOKENS) + ranked_words)}
 
     token_to_word = {token: word for word, token in word_to_token.items()}
 
@@ -68,3 +69,8 @@ def load_mappings(folder_path="word_mapping"):
     token_to_word = {int(token): word for token, word in token_to_word.items()}
 
     return word_to_token, token_to_word
+
+
+def vocabulary_fingerprint(word_to_token):
+    payload = json.dumps(word_to_token, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()

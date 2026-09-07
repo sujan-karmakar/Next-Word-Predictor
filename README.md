@@ -77,19 +77,20 @@ Enter a prompt and the number of words to generate. Type `exit` at the prompt to
 
 The default training configuration is defined in `train.py`:
 
-- Sequence length: 20 tokens
+- Sequence length: 20 tokens (padding is ignored by the GRU)
 - Batch size: 64
-- Embedding size: 128
-- GRU hidden size: 256
+- Embedding size: 192
+- GRU hidden size: 384
 - GRU layers: 2
-- Dropout: 0.2
-- Epochs: 10
+- Dropout: 0.3
+- Epochs: 20 (the learning rate is reduced automatically when validation loss stalls)
 - Learning rate: 0.001
 
-Prediction uses top-10 sampling with temperature `0.8`. The `<PAD>` and `<UNK>` tokens are excluded from generated output.
+Prediction uses top-10 sampling with temperature `0.8`. The `<pad>`, `<unk>`, and `<bos>` tokens are excluded from generated output.
 
 ## Notes
 
-- Run preprocessing before training if the processed corpus does not exist or the training data changes.
-- Run training before evaluation or prediction so the checkpoint and vocabulary mappings match.
+- Run preprocessing before training if the processed corpus does not exist or the training data changes. It preserves PTB/WikiText `<unk>` markers and treats punctuation as separators, consistently across all splits.
+- Run training before evaluation or prediction so the checkpoint and vocabulary mappings match. The scripts deliberately reject a stale checkpoint, rather than producing misleading metrics.
+- Test perplexity is the exponential of cross-entropy; it is expected to be much larger than accuracy because it measures the probability assigned to every correct next token. Compare it only across runs using the same tokenization and vocabulary.
 - CUDA is used automatically when PyTorch detects a compatible GPU; otherwise, the project runs on CPU.
